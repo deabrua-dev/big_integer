@@ -2,60 +2,42 @@ use std::cmp::max;
 use std::i64;
 use std::ops::{Add, BitAnd, BitOr, BitXor, Not, Rem, Shl, Shr, Sub};
 
-const BASE: u64 = 16;
-const KARATSUBA_MIN_LENGTH: usize = 4;
-
 #[derive(Debug)]
 pub struct BigInt {
     pub digits: Vec<u64>,
-    pub is_negative: bool,
 }
 
 impl Default for BigInt {
     fn default() -> Self {
-        Self { digits: vec![], is_negative: false }
+        Self { digits: vec![]}
     }
 }
 
 impl BigInt {
     pub fn new() -> Self {
-        Self { digits: vec![], is_negative: false }
+        Self { digits: vec![]}
     }
 
     pub fn get_hex(&self) -> String {
-        let mut result = String::new();
-        if self.is_negative {
-            for digit in self.digits.iter().rev() {
-                let test = BASE as i64 - *digit as i64 - 1;
-                let mut hex_str = format!("{:x}", test);
-                let end_index = hex_str.len()-1;
-                hex_str = hex_str.chars().nth(end_index).unwrap().to_string();
-                result.push_str(&hex_str);
-            }
-        } else {
-            for digit in self.digits.iter().rev() {
-                let hex_str = format!("{:x}", digit);
-                result.push_str(&hex_str);
-            }
-        }
-        return result;
+        return self.digits.iter()
+            .rev()
+            .map(|&x| format!("{:x}", x).chars()
+                .last()
+                .unwrap()
+                .to_string())
+            .collect::<Vec<String>>()
+            .join("");
     }
 
     pub fn set_hex(&mut self, number: String) -> Result<(), String> {
         if number.is_empty() {
             return Err(String::from("String is empty."));
         }
-        let mut slice = number.clone();
-        if number.len() > 1 &&
-            ['8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'a', 'b', 'c', 'e', 'f'].contains(&number.chars().nth(0).unwrap()) {
-            slice = make_it_positive(number);
-            self.is_negative = true;
+        let hex_str = number.clone();
+        for chunk  in hex_str.chars().rev() {
+            self.digits.push(u64::from_str_radix(chunk.to_string().as_str(), 16).unwrap());
         }
-        for item in slice.chars().rev() {
-            let hex_int = u64::from_str_radix(&item.to_string(), 16).unwrap();
-            self.digits.push(hex_int);
-        }
-        while self.digits.len() > 1 && self.digits.last().unwrap() == &0u64 {
+        while *self.digits.last().unwrap() == 0 {
             self.digits.pop();
         }
         return Ok(());
@@ -67,9 +49,9 @@ impl Not for BigInt {
 
     fn not(self) -> Self {
         let mut answer = BigInt::new();
-        answer.is_negative = !self.is_negative;
-        for digit in &self.digits {
-            answer.digits.push(*digit)
+        for digit in self.digits {
+            let not_digit = !digit;
+            answer.digits.push(not_digit);
         }
         return answer;
     }
@@ -126,8 +108,12 @@ impl BitAnd for BigInt {
 impl Shr<usize> for BigInt {
     type Output = Self;
 
-    fn shr(self, _rhs: usize) -> Self {
+    fn shr(self, _shift: usize) -> Self {
+        if _shift <= 0 {
+            panic!("ShiftR get Zero!");
+        }
         let mut answer = self.clone();
+
         return answer;
     }
 }
@@ -137,6 +123,7 @@ impl Shl<usize> for BigInt {
 
     fn shl(self, _rhs: usize) -> Self {
         let mut answer = self.clone();
+
         return answer;
     }
 }
@@ -146,31 +133,25 @@ impl Add for BigInt {
 
     fn add(mut self, mut _rhs: Self) -> Self {
         let mut answer = BigInt::new();
-        if self.is_negative && !_rhs.is_negative {
-            answer = _rhs - self;
-        } else if !self.is_negative && _rhs.is_negative {
-            answer = self - _rhs;
-        } else {
-            while self.digits.len() > _rhs.digits.len() {
-                _rhs.digits.push(0);
+        while self.digits.len() > _rhs.digits.len() {
+            _rhs.digits.push(0);
+        }
+        while self.digits.len() < _rhs.digits.len() {
+            self.digits.push(0);
+        }
+        let mut carry = 0;
+        for i in 0..self.digits.len() {
+            let digit_sum = self.digits[i] + _rhs.digits[i] + carry;
+            if digit_sum >= 16 {
+                answer.digits.push(digit_sum - 16);
+                carry = 1;
+            } else {
+                answer.digits.push(digit_sum);
+                carry = 0;
             }
-            while self.digits.len() < _rhs.digits.len() {
-                self.digits.push(0);
-            }
-            let mut carry = 0;
-            for i in 0..self.digits.len() {
-                let digit_sum = self.digits[i] + _rhs.digits[i] + carry;
-                if digit_sum >= BASE {
-                    answer.digits.push(digit_sum - BASE);
-                    carry = 1;
-                } else {
-                    answer.digits.push(digit_sum);
-                    carry = 0;
-                }
-            }
-            if carry == 1 {
-                answer.digits.push(1);
-            }
+        }
+        if carry == 1 {
+            answer.digits.push(1);
         }
         while *answer.digits.last().unwrap() == 0 {
             answer.digits.pop();
@@ -184,31 +165,21 @@ impl Sub for BigInt {
 
     fn sub(mut self, mut _rhs: Self) -> Self {
         let mut answer = BigInt::new();
-        if self.is_negative && !_rhs.is_negative {
-            answer = _rhs - self;
-        } else if self.is_negative && _rhs.is_negative {
-            answer = self + _rhs;
-        } else if !self.is_negative && _rhs.is_negative {
-            _rhs.is_negative = false;
-            _rhs = _rhs + BigInt{ digits: vec![1], is_negative: false };
-            answer = self + _rhs;
-        } else {
-            while self.digits.len() > _rhs.digits.len() {
-                _rhs.digits.push(0);
-            }
-            while self.digits.len() < _rhs.digits.len() {
-                self.digits.push(0);
-            }
-            let mut carry = 0;
-            for i in 0..self.digits.len() {
-                let digit_diff = self.digits[i] as i64 - _rhs.digits[i] as i64 - carry;
-                if digit_diff < 0 {
-                    answer.digits.push((digit_diff + BASE as i64) as u64);
-                    carry = 1;
-                } else {
-                    answer.digits.push(digit_diff as u64);
-                    carry = 0;
-                }
+        while self.digits.len() > _rhs.digits.len() {
+            _rhs.digits.push(0);
+        }
+        while self.digits.len() < _rhs.digits.len() {
+            self.digits.push(0);
+        }
+        let mut carry = 0;
+        for i in 0..self.digits.len() {
+            let digit_diff = self.digits[i] as i64 - _rhs.digits[i] as i64 - carry;
+            if digit_diff < 0 {
+                answer.digits.push((digit_diff + 16 as i64) as u64);
+                carry = 1;
+            } else {
+                answer.digits.push(digit_diff as u64);
+                carry = 0;
             }
         }
         while *answer.digits.last().unwrap() == 0 {
@@ -230,8 +201,7 @@ impl Rem for BigInt {
 
 impl PartialEq<Self> for BigInt {
     fn eq(&self, other: &Self) -> bool {
-        if (self.is_negative != other.is_negative) ||
-            (self.digits.len() != other.digits.len()){
+        if self.digits.len() != other.digits.len() {
             return false;
         }
         for i in 0..self.digits.len() {
@@ -245,19 +215,6 @@ impl PartialEq<Self> for BigInt {
 
 impl Clone for BigInt {
     fn clone(&self) -> Self {
-        return BigInt{ digits: self.digits.clone(), is_negative: self.is_negative}
+        return BigInt{ digits: self.digits.clone() }
     }
-}
-
-fn make_it_positive(number: String) -> String {
-    let mut result = String::new();
-    for item in number.chars() {
-        let digit = i64::from_str_radix(&item.to_string(), 16).unwrap();
-        let test = BASE as i64 - digit - 1;
-        let mut hex_str = format!("{:x}", test);
-        let end_index = hex_str.len()-1;
-        hex_str = hex_str.chars().nth(end_index).unwrap().to_string();
-        result.push_str(hex_str.as_str());
-    }
-    return result;
 }

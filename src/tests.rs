@@ -3,6 +3,14 @@ mod test {
     use crate::big_int::BigInt;
 
     #[test]
+    fn get_set_test() {
+        let mut test = BigInt::new();
+        test.set_hex(String::from("33ced2c76b26cae94e162c4c0d2c0ff7c13094b0185a3c122e732d5ba77efebc")).unwrap();
+        let result = test.get_hex();
+        assert_eq!("33ced2c76b26cae94e162c4c0d2c0ff7c13094b0185a3c122e732d5ba77efebc".to_string().to_lowercase(), result);
+    }
+
+    #[test]
     fn not_test() {
         let mut test_1 = BigInt::new();
         let mut test_2 = BigInt::new();
@@ -91,21 +99,11 @@ mod test {
     }
 
     #[test]
-    fn eq_positive_test() {
+    fn eq_test() {
         let mut test_1 = BigInt::new();
         let mut test_2 = BigInt::new();
         test_1.set_hex(String::from("33ced2c76b26cae94e162c4c0d2c0ff7c13094b0185a3c122e732d5ba77efebc")).unwrap();
         test_2.set_hex(String::from("33ced2c76b26cae94e162c4c0d2c0ff7c13094b0185a3c122e732d5ba77efebc")).unwrap();
-        let result = test_1 == test_2;
-        assert_eq!(true, result);
-    }
-
-    #[test]
-    fn eq_negative_test() {
-        let mut test_1 = BigInt::new();
-        let mut test_2 = BigInt::new();
-        test_1.set_hex(String::from("cc312d3894d93516b1e9d3b3f2d3f0083ecf6b4fe7a5c3edd18cd2a458810143")).unwrap();
-        test_2.set_hex(String::from("cc312d3894d93516b1e9d3b3f2d3f0083ecf6b4fe7a5c3edd18cd2a458810143")).unwrap();
         let result = test_1 == test_2;
         assert_eq!(true, result);
     }
@@ -120,12 +118,4 @@ mod test {
         assert_eq!(true, result);
     }
 
-
-    #[test]
-    fn neg_sign_store_test() {
-        let mut test_1 = BigInt::new();
-        test_1.set_hex(String::from("cc312d3894d93516b1e9d3b3f2d3f0083ecf6b4fe7a5c3edd18cd2a458810143")).unwrap();
-        let result = (test_1).get_hex();
-        assert_eq!("cc312d3894d93516b1e9d3b3f2d3f0083ecf6b4fe7a5c3edd18cd2a458810143".to_string(), result);
-    }
 }
