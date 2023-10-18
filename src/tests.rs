@@ -92,10 +92,10 @@ mod test {
     fn modulo_test() {
         let mut test_1 = BigInt::new();
         let mut test_2 = BigInt::new();
-        test_1.set_hex(String::from("33ced2c76b26cae94e162c4c0d2c0ff7c13094b0185a3c122e732d5ba77efebc")).unwrap();
-        test_2.set_hex(String::from("a78865c13b14ae4e25e90771b54963ee2d68c0a64d4a8ba7c6f45ee0e9daa65b")).unwrap();
+        test_1.set_hex(String::from("CB7425CD4")).unwrap();
+        test_2.set_hex(String::from("4D1EF85")).unwrap();
         let result = (test_1 % test_2).get_hex();
-        assert_eq!("33ced2c76b26cae94e162c4c0d2c0ff7c13094b0185a3c122e732d5ba77efebc".to_string(), result);
+        assert_eq!("1B7D125".to_string().to_lowercase(), result);
     }
 
     #[test]

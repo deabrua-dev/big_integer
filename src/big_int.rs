@@ -109,22 +109,15 @@ impl Shr<usize> for BigInt {
     type Output = Self;
 
     fn shr(self, _shift: usize) -> Self {
-        if _shift <= 0 {
-            panic!("ShiftR get Zero!");
-        }
-        let mut answer = self.clone();
-
-        return answer;
+        todo!()
     }
 }
 
 impl Shl<usize> for BigInt {
     type Output = Self;
 
-    fn shl(self, _rhs: usize) -> Self {
-        let mut answer = self.clone();
-
-        return answer;
+    fn shl(self, _shift: usize) -> Self {
+        todo!()
     }
 }
 
@@ -193,28 +186,7 @@ impl Rem for BigInt {
     type Output = Self;
 
     fn rem(self, _rhs: Self) -> Self {
-        let mut other = _rhs.clone();
-        let mut quotient  = BigInt::new();
-        let mut remainder = BigInt::new();
-        let mut divisor = BigInt::new();
-
-        for digit in self.digits {
-            remainder.digits.push(digit);
-            divisor.digits.push(0);
-
-            while remainder >= other {
-                divisor = divisor + other.clone();
-                remainder = remainder - other.clone();
-            }
-
-            quotient.digits.push(*divisor.digits.last().unwrap());
-            divisor.digits.pop();
-        }
-        while quotient.digits.len() > 1 &&
-            *quotient.digits.last().unwrap() == 0 {
-            quotient.digits.pop();
-        }
-        return remainder;
+        todo!()
     }
 }
 
