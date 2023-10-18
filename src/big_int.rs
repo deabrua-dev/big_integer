@@ -1,4 +1,4 @@
-use std::cmp::max;
+use std::cmp::{max, Ordering};
 use std::i64;
 use std::ops::{Add, BitAnd, BitOr, BitXor, Not, Rem, Shl, Shr, Sub};
 
@@ -192,10 +192,29 @@ impl Sub for BigInt {
 impl Rem for BigInt {
     type Output = Self;
 
-    fn rem(self, rhs: Self) -> Self {
-        let mut answer = BigInt::new();
+    fn rem(self, _rhs: Self) -> Self {
+        let mut other = _rhs.clone();
+        let mut quotient  = BigInt::new();
+        let mut remainder = BigInt::new();
+        let mut divisor = BigInt::new();
 
-        return answer;
+        for digit in self.digits {
+            remainder.digits.push(digit);
+            divisor.digits.push(0);
+
+            while remainder >= other {
+                divisor = divisor + other.clone();
+                remainder = remainder - other.clone();
+            }
+
+            quotient.digits.push(*divisor.digits.last().unwrap());
+            divisor.digits.pop();
+        }
+        while quotient.digits.len() > 1 &&
+            *quotient.digits.last().unwrap() == 0 {
+            quotient.digits.pop();
+        }
+        return remainder;
     }
 }
 
@@ -210,6 +229,25 @@ impl PartialEq<Self> for BigInt {
             }
         }
         return true;
+    }
+}
+
+impl PartialOrd for BigInt {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        if self.digits.len() < other.digits.len() {
+            return Some(Ordering::Less);
+        } else if self.digits.len() > other.digits.len() {
+            return Some(Ordering::Greater);
+        }
+
+        for (self_digit, other_digit) in self.digits.iter().rev().zip(other.digits.iter().rev()) {
+            if self_digit < other_digit {
+                return Some(Ordering::Less);
+            } else if self_digit > other_digit {
+                return Some(Ordering::Greater);
+            }
+        }
+        return Some(Ordering::Equal);
     }
 }
 
